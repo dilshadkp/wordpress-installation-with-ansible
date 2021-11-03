@@ -1,0 +1,195 @@
+---
+- name: "host a wordpress website in LAMPstack"
+  hosts: amazon
+  become: yes
+  vars_files:
+    - apache.vars
+    - mariadb.vars
+    - wp.vars
+    - wordpress-download.link
+  tasks:
+
+    - name: "Install apache"
+      yum:
+        name: httpd
+        state: present
+      tags:
+        - lamp
+        - apache
+
+    - name: "Install PHP 7.4"
+      shell: amazon-linux-extras install php7.4 -y
+      tags:
+        - lamp
+        - apache
+
+    - name: "copy httpd conf from template"
+      template:
+        src: httpd.conf.tmpl
+        dest: /etc/httpd/conf/httpd.conf
+      tags:
+        - lamp
+        - apache
+
+    - name: "copy virtualhost from template"
+      template:
+        src: vhost.conf.tmpl
+        dest: /etc/httpd/conf.d/{{http_domain}}.conf
+      tags:
+        - lamp
+        - apache
+
+    - name: "create document root for website"
+      file:
+        path: /var/www/html/{{http_domain}}/
+        state: directory
+        owner: "{{http_user}}"
+        group:  "{{http_group}}"
+      tags:
+        - lamp
+        - apache
+
+    - name: "create phpinfo page"
+      copy:
+        content: "<?php phpinfo(); ?>"
+        dest: /var/www/html/{{http_domain}}/phpinfo.php
+        owner: "{{http_user}}"
+        group: "{{http_group}}"
+      tags:
+        - lamp
+        - apache
+
+    - name: "Install mariadb"
+      yum:
+        name: 
+          - mariadb-server
+          - MySQL-python
+        state: present
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "Restart and enable LAMP services"
+      service: 
+        name: "{{item}}"
+        state: restarted
+        enabled: true
+      with_items:
+        - httpd
+        - mariadb
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "setting root password for mariadb"
+      ignore_errors: true
+      mysql_user:
+        login_user: "root"
+        login_password: ""
+        user: "root"
+        password: "{{db_root_password}}"
+        host_all: yes
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "remove anonymous users"
+      mysql_user:
+        login_user: "root"
+        login_password: "{{db_root_password}}"
+        user: ""
+        state: absent
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "remove test database"
+      mysql_db:
+        login_user: "root"
+        login_password: "{{db_root_password}}"
+        name: "test"
+        state: absent
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "create wordpress database"
+      mysql_db:
+        login_user: "root"
+        login_password: "{{db_root_password}}"
+        name: "{{wp_db}}"
+        state: present
+      tags:
+        - lamp
+        - mariadb
+
+    - name: "create wordpress db user"
+      mysql_user:
+        login_user: "root"
+        login_password: "{{db_root_password}}"
+        name: "{{wp_db_user}}"
+        state: present
+        password: "{{wp_db_user_password}}"
+        priv: '{{wp_db}}.*:ALL'
+      tags:
+        - lamp
+        - mariadb
+
+
+    - name: "Download wordpress from Internet"
+      get_url:
+        url: "{{download_link}}"
+        dest: "/tmp/wordpress.tar.gz"
+        remote_src: true
+      tags:
+        - wordpress
+
+    - name: "extract tar file"
+      unarchive:
+        src: "/tmp/wordpress.tar.gz"
+        dest: "/tmp/"
+        remote_src: true
+      tags:
+        - wordpress
+
+    - name: "copy wordpress files from /tmp to docroot"
+      copy: 
+        src: "/tmp/wordpress/"
+        dest: /var/www/html/{{http_domain}}/
+        owner: "{{http_user}}"
+        group: "{{http_group}}"
+        remote_src: true
+      tags:
+        - wordpress
+
+    - name: "configuring wp-config.php from template"
+      template:
+        src: wp-config.php.tmpl
+        dest: /var/www/html/{{http_domain}}/wp-config.php
+        owner: "{{http_user}}"
+        group: "{{http_group}}"
+      tags:
+        - wordpress
+
+    - name: "clean-up unwanted files"
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items:
+        - "/tmp/wordpress"
+        - "/tmp/wordpress.tar.gz"
+      tags:
+        - wordpress
+
+    - name: "Final restart of services"
+      service:
+        name: "{{item}}"
+        state: restarted
+      with_items:
+        - httpd
+        - mariadb
+      tags:
+        - wordpress
+
+
+
