@@ -24,7 +24,11 @@ IP-of-client-server	    ansible_user="SSH-user"		ansible_port="SSH-port-of-clien
 ```shell
 echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 ```
-- ## Ansible Modules used in this Playbook
+ ## Features of this Playbook
+  - Used tags for each tasks so that you can control tasks based on tags.
+  - You can provide your preferred domain name in ***vhost.vars*** file. The wordpress will be installed under that domain in the server.
+
+ ## Ansible Modules used in this Playbook
   - [yum](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/yum_module.html)
   - [copy](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html)
   - [service](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html)
@@ -38,15 +42,9 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
   
 - [with_items](https://docs.ansible.com/ansible/latest/user_guide/playbooks_loops.html) is used as a loop to restart services
 
-- ## Features of this Playbook
-  - Used tags for each tasks so that you can control tasks based on tags.
-  - You can provide your preferred domain name in ***vhost.vars*** file. The wordpress will be installed under that domain in the server.
+ ## Tasks defined in the Playbook
 
-
-- ## Tasks defined in the Playbook
-
-
- - #### Task 1
+ #### Task 1
 
 >These tasks will perform below actions:
 - Install Apache service in the server
@@ -67,7 +65,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - lamp
         - apache
 ```
- - #### Task 2
+  #### Task 2
 
 >These task wil perform below actions:
 - copy the content of template *httpd.conf.tmpl* in the master machine to */etc/httpd/conf/httpd.conf* in the client server. By doing this, we can control the apache configuration through Ansible.
@@ -89,7 +87,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - lamp
         - apache
 ```
- - #### Task 3
+ #### Task 3
 
 >These task wil perform below actions:
 - Create document root for the site and set proper ownerships to the directory
@@ -115,7 +113,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - lamp
         - apache
 ```
- - #### Task 4
+ #### Task 4
 
 >These task wil perform below actions:
 - Install Mariadb-server and MySQL-python packages in the server.
@@ -144,7 +142,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - lamp
         - mariadb
 ```
- - #### Task 5
+ #### Task 5
 
 >These task wil perform below actions:
 - Set password for mysql root user
@@ -184,7 +182,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - lamp
         - mariadb
 ```
- - #### Task 6
+#### Task 6
 
 >These task wil perform below actions:
 - Create a database for Wordpress
@@ -214,7 +212,7 @@ echo "<SSH-user> ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
         - mariadb
 ```
 
- - #### Task 7
+ #### Task 7
 
 >These set of tasks will perform below actions:
 - Download latest version of Wordpress from Internet to /tmp of client server
